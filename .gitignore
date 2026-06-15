@@ -1,0 +1,16 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environments
+.venv/
+venv/
+ENV/
+
+# Vault database and local configs (DO NOT COMMIT SENSITIVE FILES)
+vault.json
+config.json
+test_vault.json
+*.log

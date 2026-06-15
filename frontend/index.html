@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Trust Password Manager & Secure Vault</title>
+    <!-- Curvy Font Outfit from Google Fonts (with system fallbacks for offline usage) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Main Application Wrapper -->
+    <div id="app-container">
+
+        <!-- 1. SETUP VAULT VIEW -->
+        <div id="setup-view" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="logo-icon">🔒</div>
+                <h2>Create Your Vault</h2>
+                <p>Initialize your local, zero-trust password vault. Choose a strong master password. It cannot be recovered!</p>
+            </div>
+            <form id="setup-form" class="auth-form">
+                <div class="form-group">
+                    <label for="setup-password">Master Password</label>
+                    <input type="password" id="setup-password" required placeholder="Enter a secure master password...">
+                </div>
+                <div class="form-group">
+                    <label for="setup-confirm">Confirm Master Password</label>
+                    <input type="password" id="setup-confirm" required placeholder="Confirm your master password...">
+                </div>
+                <button type="submit" class="btn btn-primary">Initialize Vault</button>
+            </form>
+        </div>
+
+        <!-- 2. LOGIN VAULT VIEW -->
+        <div id="login-view" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="logo-icon">🔒</div>
+                <h2>Unlock Your Vault</h2>
+                <p>Enter your Master Password to decrypt your credentials. You have 5 attempts before panic self-destruct wipes the database.</p>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-password">Master Password</label>
+                    <input type="password" id="login-password" required placeholder="Enter your Master Password...">
+                </div>
+                <button type="submit" class="btn btn-primary">Unlock Vault</button>
+            </form>
+            <div id="login-error" class="error-msg hidden"></div>
+        </div>
+
+        <!-- 3. MAIN DASHBOARD VIEW -->
+        <div id="dashboard-view" class="dashboard-container hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <span class="logo">🛡️ VaultManager</span>
+                </div>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li>
+                            <button class="nav-item active" data-category="all">
+                                <span class="nav-icon">📁</span> All Vault Items
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-category="login">
+                                <span class="nav-icon">🔑</span> Logins
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-category="credit_card">
+                                <span class="nav-icon">💳</span> Credit Cards
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-category="identity">
+                                <span class="nav-icon">👤</span> Identities
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-category="secure_note">
+                                <span class="nav-icon">📝</span> Secure Notes
+                            </button>
+                        </li>
+                        <li class="nav-divider"></li>
+                        <li>
+                            <button class="nav-item" data-category="generator">
+                                <span class="nav-icon">⚡</span> Password Generator
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-category="trash">
+                                <span class="nav-icon">🗑️</span> Trash Bin
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <button id="sidebar-settings-btn" class="sidebar-btn" title="Settings">⚙️ Settings</button>
+                    <button id="sidebar-lock-btn" class="sidebar-btn btn-danger" title="Lock Vault">🔒 Lock</button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Top Toolbar -->
+                <header class="top-toolbar">
+                    <div class="search-box-container" id="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" placeholder="Search service, username, card name...">
+                    </div>
+                    <div class="top-actions">
+                        <button id="empty-trash-btn" class="btn btn-danger hidden">🗑️ Empty Trash</button>
+                        <button id="add-credential-btn" class="btn btn-primary">➕ Add Credential</button>
+                    </div>
+                </header>
+
+                <!-- Vault List Container -->
+                <section class="vault-list-section" id="vault-list-container">
+                    <div class="vault-grid" id="credentials-grid">
+                        <!-- Cards injected via Javascript -->
+                    </div>
+                    <!-- Empty State Placeholder -->
+                    <div id="empty-state" class="empty-state hidden">
+                        <div class="empty-icon">📂</div>
+                        <h3>No items found</h3>
+                        <p>No credentials match the current filter or query. Click 'Add Credential' to create one!</p>
+                    </div>
+                </section>
+
+                <!-- Generator Tab View -->
+                <section class="generator-section hidden" id="generator-tab">
+                    <div class="generator-card">
+                        <h2>Advanced Password Generator</h2>
+                        <div class="generator-tabs-headers">
+                            <button class="gen-tab-btn active" data-gen-mode="standard">Random Password</button>
+                            <button class="gen-tab-btn" data-gen-mode="diceware">Diceware Passphrase</button>
+                        </div>
+
+                        <!-- Result Display Panel -->
+                        <div class="generator-output-container">
+                            <input type="text" id="generator-output" readonly value="" placeholder="Your generated password...">
+                            <button id="copy-generated-btn" class="btn btn-secondary">Copy</button>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div id="strength-meter" class="strength-meter-bar"></div>
+                            <span id="strength-label" class="strength-text">Very Weak</span>
+                        </div>
+
+                        <!-- Standard Generator Settings -->
+                        <div id="standard-generator-settings" class="gen-settings-group">
+                            <div class="form-group slider-group">
+                                <label for="gen-length">Password Length: <span id="length-val">16</span></label>
+                                <input type="range" id="gen-length" min="6" max="200" value="16">
+                            </div>
+                            <div class="checkbox-grid">
+                                <div class="chk-group">
+                                    <input type="checkbox" id="gen-upper" checked>
+                                    <label for="gen-upper">Uppercase Letters (A-Z)</label>
+                                </div>
+                                <div class="chk-group">
+                                    <input type="checkbox" id="gen-lower" checked>
+                                    <label for="gen-lower">Lowercase Letters (a-z)</label>
+                                </div>
+                                <div class="chk-group">
+                                    <input type="checkbox" id="gen-digits" checked>
+                                    <label for="gen-digits">Digits (0-9)</label>
+                                </div>
+                                <div class="chk-group">
+                                    <input type="checkbox" id="gen-special" checked>
+                                    <label for="gen-special">Special Characters (!@#$...)</label>
+                                </div>
+                                <div class="chk-group">
+                                    <input type="checkbox" id="gen-ambiguous">
+                                    <label for="gen-ambiguous">Exclude Ambiguous (l, 1, I, o, 0, O)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diceware Passphrase Settings -->
+                        <div id="diceware-generator-settings" class="gen-settings-group hidden">
+                            <div class="form-group slider-group">
+                                <label for="diceware-count">Word Count: <span id="diceware-count-val">4</span></label>
+                                <input type="range" id="diceware-count" min="3" max="12" value="4">
+                            </div>
+                            <div class="form-group">
+                                <label for="diceware-separator">Word Separator Character</label>
+                                <input type="text" id="diceware-separator" value="-" maxlength="1" class="separator-input">
+                            </div>
+                        </div>
+
+                        <button id="generate-trigger-btn" class="btn btn-primary btn-block">Generate Password</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+    </div> <!-- End App Container -->
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- MODAL OVERLAYS -->
+
+    <!-- 1. ADD / EDIT CREDENTIAL MODAL -->
+    <div id="credential-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Credential</h3>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <form id="credential-form" class="modal-form">
+                <input type="hidden" id="cred-id">
+                
+                <div class="form-group">
+                    <label for="cred-category">Category</label>
+                    <select id="cred-category">
+                        <option value="login">Login Account</option>
+                        <option value="credit_card">Credit Card</option>
+                        <option value="identity">Identity Profile</option>
+                        <option value="secure_note">Secure Note</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cred-service" id="label-service">Service / Title</label>
+                    <input type="text" id="cred-service" required placeholder="e.g. GitHub, Google Card, Identity...">
+                </div>
+
+                <!-- Dynamic Form Area based on selected category -->
+                <div id="category-fields-container">
+                    <!-- Javascript will inject forms dynamically here -->
+                </div>
+
+                <div class="form-group">
+                    <label for="cred-notes">Notes</label>
+                    <textarea id="cred-notes" rows="3" placeholder="Optional notes..."></textarea>
+                </div>
+
+                <div id="password-history-container" class="form-group hidden">
+                    <label>Password History (Last 5 Rotations)</label>
+                    <ul id="password-history-list" class="history-list"></ul>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Credential</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. SETTINGS DIALOG MODAL -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-card modal-wide">
+            <div class="modal-header">
+                <h3>Settings & Vault Configuration</h3>
+                <button class="modal-close" id="settings-close-btn">&times;</button>
+            </div>
+            <div class="modal-body settings-grid">
+                
+                <!-- Theme & Styling Panel -->
+                <div class="settings-panel">
+                    <h4>Appearance & Styling</h4>
+                    <div class="setting-row">
+                        <span class="setting-label">Theme Mode</span>
+                        <div class="theme-toggle-container">
+                            <button id="theme-dark-btn" class="theme-btn active">Dark</button>
+                            <button id="theme-light-btn" class="theme-btn">Light</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Accent Color</span>
+                        <input type="color" id="settings-accent" value="#00adb5" class="color-picker-input">
+                    </div>
+                </div>
+
+                <!-- Timeout Limits Panel -->
+                <div class="settings-panel">
+                    <h4>Security Limits</h4>
+                    <div class="form-group slider-group">
+                        <label for="settings-autolock">Auto-lock Inactivity (Minutes): <span id="autolock-val">5</span></label>
+                        <input type="range" id="settings-autolock" min="1" max="60" value="5">
+                    </div>
+                    <div class="form-group slider-group">
+                        <label for="settings-clipboard">Clipboard Clear Delay (Seconds): <span id="clipboard-val">30</span></label>
+                        <input type="range" id="settings-clipboard" min="5" max="300" value="30">
+                    </div>
+                </div>
+
+                <!-- Master Password Rotation -->
+                <div class="settings-panel">
+                    <h4>Change Master Password</h4>
+                    <form id="change-password-form" class="inner-settings-form">
+                        <div class="form-group">
+                            <input type="password" id="rotate-current" placeholder="Current Master Password" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="rotate-new" placeholder="New Master Password" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary btn-sm">Rotate Password</button>
+                    </form>
+                </div>
+
+                <!-- Decoy Vault Setup -->
+                <div class="settings-panel">
+                    <h4>Setup Decoy Vault (Duress Mode)</h4>
+                    <p class="setting-description-note">
+                        Setting a Decoy Password creates an isolated sandbox. Logging in with this password displays fake, realistic accounts, providing plausible deniability.
+                    </p>
+                    <form id="setup-decoy-form" class="inner-settings-form">
+                        <div class="form-group">
+                            <input type="password" id="decoy-password" placeholder="Decoy Master Password" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary btn-sm">Setup Decoy Vault</button>
+                    </form>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="settings-save-btn">Close Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript Script Import -->
+    <script src="app.js"></script>
+</body>
+</html>
