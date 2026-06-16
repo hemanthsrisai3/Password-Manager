@@ -1,104 +1,104 @@
-# Zero-Trust Password Manager & Secure Vault
+# Local-First Zero-Trust Password Manager & Secure Vault
 
-A secure, local-first, zero-trust password manager and credentials vault. Built as a full-stack desktop application using a **FastAPI** backend in Python and a responsive **Vanilla HTML/CSS/JS** single-page frontend.
+A secure, local-first, zero-trust password manager and credentials vault designed to run entirely offline. Built with a high-performance **FastAPI** backend in Python and a modern, responsive **Vanilla HTML/CSS/JS** single-page frontend.
 
-The application runs entirely on your local machine (`localhost`), ensuring that your Master Password, salts, and decrypted credentials never leave your device.
-
----
-
-## 🛠️ Tech Stack
-*   **Backend:** Python 3.10+, FastAPI, Uvicorn, Cryptography (Fernet/PBKDF2HMAC), Pydantic.
-*   **Frontend:** HTML5, Vanilla CSS3 (Custom styling, variables, light/dark theme support), Modern Javascript (ES6+, Fetch API, activity listeners, clipboard controls).
-*   **Database:** Local encrypted JSON store (`vault.json`).
+The application operates entirely on your local machine (`localhost`), ensuring that your Master Password, salts, encryption keys, and decrypted credentials never leave your device.
 
 ---
 
-## 🔒 Security & Features
+## 🛠️ System Stack
+
+- **Backend:** Python 3.10+, FastAPI (Asynchronous Web Framework), Uvicorn (ASGI Server), Cryptography (Fernet/AES-256-CBC, PBKDF2-HMAC-SHA256), Pydantic (Data Validation).
+- **Frontend:** HTML5, Vanilla CSS3 (Custom design system, CSS variables, dark/light theme engine), Modern JavaScript (ES6+, Fetch API, custom clipboard controls, inactivity tracking).
+- **Database:** Local encrypted JSON store (`vault.json`).
+
+---
+
+## 🔒 Security Architecture & Features
 
 ### 1. Zero-Trust Cryptography
-*   Uses **PBKDF2-HMAC-SHA256** with 100,000 iterations to derive a 256-bit encryption key from your Master Password and a secure random 16-byte salt.
-*   All credential payloads are encrypted/decrypted locally using **Fernet (AES-128/256 in CBC mode with HMAC-SHA256)**.
-*   No cloud sync, no tracking, and no external requests.
+- **Key Derivation:** Uses **PBKDF2-HMAC-SHA256** with 100,000 iterations to derive a secure 256-bit encryption key from your Master Password and a cryptographically secure random 16-byte salt.
+- **Payload Encryption:** Credentials are encrypted and decrypted locally using **Fernet (AES-128/256 in CBC mode with HMAC-SHA256)**.
+- **Privacy:** No cloud synchronization, no remote telemetry, and zero external network dependencies.
 
-### 2. Plausible Deniability (Decoy Vault / Duress Mode)
-*   Define a decoy Master Password in settings. 
-*   Entering this decoy password on the login screen unlocks an isolated decoy vault containing fake, realistic credentials (e.g. Netflix, Facebook).
-*   The decoy vault verification utilizes an independent salt and key derivation, making it cryptographically indistinguishable from the primary vault.
+### 2. Plausible Deniability (Duress Vault / Decoy Mode)
+- Configure an alternate decoy Master Password in the Settings panel.
+- Entering this decoy password during authentication unlocks an isolated, decoy vault containing pre-configured fake credentials.
+- Decoy vaults utilize an independent random salt and key derivation path, making them cryptographically indistinguishable from the primary vault.
 
 ### 3. Panic Self-Destruct
-*   Tracks consecutive failed login attempts in configuration.
-*   Upon the **5th consecutive failed attempt**, a panic sequence is triggered: the vault file (`vault.json`) is securely shredded by overwriting it with random bytes (`os.urandom`) and deleted from disk before the server rejects the request.
+- Tracks consecutive failed authentication attempts locally.
+- Upon the **5th consecutive failed attempt**, a panic sequence is executed: the vault database file (`vault.json`) is securely shredded by overwriting it with cryptographically secure random bytes (`os.urandom`) and deleted from the storage disk before the request is rejected.
 
 ### 4. Password History & Rotation
-*   Tracks the last 5 passwords for any login account to prevent losing access to rotated credentials.
+- Tracks the last 5 passwords for credentials to prevent lockout or loss of access during credential rotation.
 
-### 5. Multi-Category Support
-*   Specialized categories with dedicated UI fields:
-    *   **🔑 Logins:** Website/Service, Username, Password, Notes.
-    *   **💳 Credit Cards:** Cardholder Name, Card Number, CVV, PIN, Expiry.
-    *   **👤 Identities:** Name, Email, Phone, Address.
-    *   **📝 Secure Notes:** Custom text-box formatted notes.
+### 5. Multi-Category Schemas
+- Specialized views with dedicated form fields:
+  - **🔑 Logins:** Website/Service URL, Username, Password, Custom Notes.
+  - **💳 Credit Cards:** Cardholder Name, Card Number, CVV, PIN, Expiration Date.
+  - **👤 Identities:** Full Name, Email, Phone Number, Address.
+  - **📝 Secure Notes:** Custom text-box formatted notes.
 
-### 6. Trash Bin (Soft Deletes)
-*   Deleted credentials are moved to the Trash Bin.
-*   Trash items can be restored to their original category, permanently deleted individually, or purged all at once via the **Empty Trash** button.
+### 6. Trash Bin (Soft Deletions)
+- Deleted credentials are moved to the Trash Bin where they can be restored, permanently purged individually, or wiped entirely via the **Empty Trash** action.
 
-### 7. Memorable Diceware Passphrase Generator
-*   Generates secure, offline passphrases using a built-in list of 200 curated words.
-*   Supports word count configuration (3 to 12 words) and custom separators (e.g., `correct-horse-battery-staple`).
+### 7. Memorable Diceware Generator
+- Generates secure, memorable, offline passphrases using a built-in dictionary list.
+- Configurable word counts (3 to 12 words) and custom separators (e.g. `correct-horse-battery-staple`).
 
-### 8. Visual Password Strength Meter
-*   Calculates real-time Shannon entropy for standard passwords and passphrases.
-*   Displays dynamic color indicators (Very Weak, Weak, Medium, Strong) under the inputs.
+### 8. Real-time Entropy Meter
+- Calculates real-time Shannon entropy for standard passwords and passphrases.
+- Displays dynamic color-coded indicators representing password strength (Very Weak, Weak, Medium, Strong).
 
-### 9. Automatic Clipboard & Inactivity Locks
-*   **Clipboard Auto-Clear:** Clears copied passwords from the system clipboard after a configurable delay (default: 30 seconds).
-*   **Inactivity Auto-Lock:** Monitors local mouse/keyboard activity and automatically locks the vault after a timeout (default: 5 minutes).
+### 9. Automatic Security Safeguards
+- **Clipboard Auto-Clear:** Clears copied credentials from the system clipboard after a configurable delay (default: 30 seconds) to prevent clipboard theft.
+- **Inactivity Auto-Lock:** Monitors mouse movement and keyboard input, automatically locking the vault and destroying in-memory encryption keys after a configurable timeout (default: 5 minutes).
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   Python 3.10 or higher.
-*   A web browser.
+- Python 3.10 or higher.
+- A modern web browser.
 
 ### Installation & Launch
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/your-username/wonderful-volta.git
-    cd wonderful-volta
-    ```
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/hemanthsrisai3/Password-Manager.git
+   cd Password-Manager
+   ```
 
-2.  **Run the Application:**
-    Simply run the launcher script. It will automatically check, create a virtual environment if needed, install dependencies, spin up the backend server, and open your default browser:
-    ```bash
-    python run.py
-    ```
+2. **Run the Application Launcher:**
+   Execute the launcher script. The script automatically manages the environment setup: it will detect if a local virtual environment exists, create `.venv` if needed, install all necessary dependencies locally, and run the backend server under the isolated environment before opening the browser.
+   ```bash
+   python run.py
+   ```
 
-3.  **Access the Web UI:**
-    If your browser does not open automatically, navigate to:
-    [http://localhost:8000](http://localhost:8000)
+3. **Access the Web Interface:**
+   If your browser does not open automatically, navigate to:
+   [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Diagnostics
 
 ### Running Unit Tests
-To run the automated FastAPI endpoint test suite:
+To run the automated FastAPI endpoint test suite directly:
 ```bash
-.venv/bin/python -m unittest backend.tests.test_api
+.venv/Scripts/python -m unittest backend.tests.test_api
 ```
-*(On Windows, use `.venv\Scripts\python -m unittest backend.tests.test_api`)*
+*(On Unix/macOS, use `.venv/bin/python -m unittest backend.tests.test_api`)*
 
-### 1,000x Robustness Execution
-To run the loop execution harness to verify that all API endpoints perform with a 100% success rate across 13,000 distinct tests:
+### Robustness & Load Verification
+To execute the robustness test suite, which runs the endpoint test matrix 1,000 times (13,000 assertions) to ensure consistent performance under memory and CPU loads:
 ```bash
 python run_load_tests.py
 ```
 
 ---
 
-## ⚠️ Security Warning & Backups
-Since this manager is local-first, **there is no cloud recovery option**. If you forget your Master Password, or if the Panic Self-Destruct is triggered, your credentials will be lost forever. It is highly recommended to maintain encrypted backups of your `vault.json` database in a secure secondary location.
+## ⚠️ Security Notice & Backups
+This application is local-first: **there is no cloud recovery option**. If you lose or forget your Master Password, or if the Panic Self-Destruct sequence is triggered, your credentials will be permanently lost. It is highly recommended to maintain secure offline backups of your `vault.json` database in a secondary location.
