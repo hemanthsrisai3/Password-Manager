@@ -100,5 +100,42 @@ python run_load_tests.py
 
 ---
 
+## ☁️ Cloud Deployment
+
+While this application is designed for local hosting, it can be deployed to cloud environments (e.g., Render, Fly.io, AWS, GCP, or digitalocean) by using the included `Dockerfile`. 
+
+### ⚠️ Critical Security & Data Requirements for Cloud Hosts
+
+1. **Enforce HTTPS (SSL/TLS):** Because your Master Password is sent to the backend for key derivation and vault validation, **HTTPS is absolutely mandatory**. Hosting over plain HTTP makes your credentials vulnerable to interception.
+2. **Persistent Storage Mounts:** Cloud containers are typically ephemeral. Every time the container restarts, updates, or scales down, all files outside persistent storage are deleted. You **MUST** mount a persistent volume at `/app/data` and configure the environment variable `VAULT_DATA_DIR=/app/data` to ensure your vault database (`vault.json`) is not lost.
+
+### 🐳 Deploying with Docker
+
+1. **Build the Docker Image:**
+   ```bash
+   docker build -t password-manager .
+   ```
+
+2. **Run the Container with a Local Data Volume Mount:**
+   On your server host, map a directory (e.g. `/var/lib/password-manager`) to the container's `/app/data` mount point:
+   ```bash
+   docker run -d \
+     -p 8000:8000 \
+     -v /var/lib/password-manager:/app/data \
+     -e VAULT_DATA_DIR=/app/data \
+     --name secure-vault \
+     password-manager
+   ```
+
+### 🚀 Standard Cloud Providers Setup
+
+- **Render / Fly.io:**
+  1. Create a **Web Service** deploying from your repository.
+  2. Create and mount a **Persistent Volume** (size 1GB is more than enough) at the mount path `/app/data`.
+  3. Configure the Env Var `VAULT_DATA_DIR` and set it to `/app/data`.
+  4. Fly.io and Render automatically provision SSL/TLS certificates and handle HTTPS redirection.
+
+---
+
 ## ⚠️ Security Notice & Backups
 This application is local-first: **there is no cloud recovery option**. If you lose or forget your Master Password, or if the Panic Self-Destruct sequence is triggered, your credentials will be permanently lost. It is highly recommended to maintain secure offline backups of your `vault.json` database in a secondary location.

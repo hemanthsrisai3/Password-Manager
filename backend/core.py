@@ -17,8 +17,11 @@ from cryptography.fernet import Fernet
 # ----------------------------------------------------------------------
 # CONSTANTS & CONFIGURATION DEFINITIONS
 # ----------------------------------------------------------------------
-VAULT_FILENAME = "vault.json"
-CONFIG_FILENAME = "config.json"
+DATA_DIR = os.environ.get("VAULT_DATA_DIR", "")
+if DATA_DIR:
+    os.makedirs(DATA_DIR, exist_ok=True)
+VAULT_FILENAME = os.path.join(DATA_DIR, "vault.json") if DATA_DIR else "vault.json"
+CONFIG_FILENAME = os.path.join(DATA_DIR, "config.json") if DATA_DIR else "config.json"
 
 DEFAULT_CONFIG = {
     "theme_mode": "dark",
