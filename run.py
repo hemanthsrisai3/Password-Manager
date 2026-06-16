@@ -30,6 +30,43 @@ if sys.version_info >= (3, 14):
         pass
 # -----------------------------------------------------------
 
+def check_and_create_venv():
+    # Detect if already running in a virtual environment
+    is_in_venv = (sys.prefix != sys.base_prefix) or hasattr(sys, "real_prefix")
+    if is_in_venv:
+        return
+
+    print("Application is not running in a virtual environment.")
+    print("Checking for/creating a local virtual environment (.venv)...")
+    
+    venv_dir = os.path.abspath(".venv")
+    if not os.path.exists(venv_dir):
+        print("Creating virtual environment in .venv...")
+        try:
+            subprocess.run([sys.executable, "-m", "venv", ".venv"], check=True)
+            print("Virtual environment created successfully.")
+        except Exception as e:
+            print(f"Warning: Failed to create virtual environment: {e}")
+            print("Attempting to run in the current global environment instead.")
+            return
+
+    if sys.platform == "win32":
+        venv_python = os.path.join(venv_dir, "Scripts", "python.exe")
+    else:
+        venv_python = os.path.join(venv_dir, "bin", "python")
+
+    if os.path.exists(venv_python):
+        print(f"Re-launching application inside virtual environment: {venv_python}")
+        try:
+            result = subprocess.run([venv_python] + sys.argv)
+            sys.exit(result.returncode)
+        except Exception as e:
+            print(f"Warning: Failed to re-launch in virtual environment: {e}")
+            print("Attempting to run in the current global environment instead.")
+    else:
+        print("Warning: Virtual environment Python interpreter not found.")
+        print("Attempting to run in the current global environment instead.")
+
 def install_dependencies():
     print("Checking application dependencies...")
     try:
@@ -59,6 +96,9 @@ def main():
     # Make sure we're in the correct working directory (root folder of project)
     project_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(project_dir)
+
+    # Automatically check/create/use virtual environment
+    check_and_create_venv()
 
     # Automatically check/install missing packages
     install_dependencies()
