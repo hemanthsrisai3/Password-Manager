@@ -28,7 +28,9 @@ if sys.version_info >= (3, 14):
 # -----------------------------------------------------------
 
 # Ensure the root directory is in the import search path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+project_dir = os.path.dirname(os.path.abspath(__file__))
+if project_dir not in sys.path:
+    sys.path.insert(0, project_dir)
 
 import subprocess
 

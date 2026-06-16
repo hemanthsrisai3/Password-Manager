@@ -103,15 +103,20 @@ def main():
     # Automatically check/install missing packages
     install_dependencies()
 
+    # Ensure project root is in python path
+    if project_dir not in sys.path:
+        sys.path.insert(0, project_dir)
+
     # Launch browser in a separate background thread
     threading.Thread(target=open_browser, daemon=True).start()
 
     print("\n[Launcher] Starting local FastAPI server on http://localhost:8000...")
     print("[Launcher] Press Ctrl+C to stop the server.\n")
     
-    # Run uvicorn
+    # Run uvicorn by dynamically importing the app
+    from backend.app import app
     import uvicorn
-    uvicorn.run("backend.app:app", host="localhost", port=8000, reload=False)
+    uvicorn.run(app, host="localhost", port=8000, reload=False)
 
 if __name__ == "__main__":
     main()
